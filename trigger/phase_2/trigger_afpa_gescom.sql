@@ -1,13 +1,17 @@
---Créer une table commander_articles constituées de colonnes :
+--Créer un déclencheur after_products_update sur la table products : 
+--lorsque le stock physique devient inférieur au stock d'alerte, une nouvelle ligne est insérée dans la table commander_articles.
 
---codart : id du produit
---qte : quantité à commander
---date : date du jour
-CREATE TABLE `commander_articles`(
-    cda_id INT(10) NOT NULL AUTO_INCREMENT,
-    codart INT(10) UNSIGNED NOT NULL,
-    qte INT(10) NOT NULL,
-    cda_date DATETIME NOT NULL,
-    PRIMARY KEY(cda_id),
-    FOREIGN KEY(`codart`) REFERENCES products(`pro_id`)
-) ENGINE = INNODB
+DELIMITER $$
+
+CREATE TRIGGER after_products_update
+AFTER UPDATE  
+ON products
+FOR EACH ROW 
+BEGIN
+    IF NEW.pro_stock < NEW.pro_stock_alert THEN
+        INSERT INTO commander_articles (qte,codart) VALUES ((NEW.pro_stock_alert - NEW.pro_stock),NEW.pro_id);
+    END IF;
+END;
+$$
+
+DELIMITER ;
